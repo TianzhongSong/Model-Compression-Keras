@@ -4,6 +4,7 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.path as path
 import matplotlib.patches as patches
+from tqdm import tqdm
 
 
 def plot_histograms(weight):
@@ -38,11 +39,47 @@ def quantize(weights):
 
 def prune(weight):
     th = np.std(weight)
-    indexes = np.argwhere(np.abs(weight) > th) + 1
-    indexes = np.prod(indexes, axis=1)
+    weight = np.transpose(weight, (3, 2, 1, 0))
+    indexes = np.argwhere(np.abs(weight) > th)
     values = weight[np.abs(weight) > th]
-    values, scale = quantize(values)
-    return indexes, values, scale
+    shape = weight.shape
+    shape_arr = np.array(list(shape))
+    shape_arr = np.array([[np.prod(shape_arr[1:])], [np.prod(shape_arr[2:])], [shape_arr[2]]])
+    inds = None
+    vals = None
+    prev = 0
+    print('Progress:')
+    pbdr = tqdm(total=len(values))
+    for index, value in zip(indexes, values):
+        pbdr.update(1)
+        ind = np.dot(index[:3], shape_arr) + index[-1]
+        if inds is None:
+            t = ind[0]
+            if t > 255:
+                t -= 255
+                inds = np.array([255])
+                vals = np.array([0.])
+                while t > 255:
+                    t -= 255
+                    inds = np.hstack((inds, np.array([255])))
+                    vals = np.hstack((vals, np.array([0.])))
+                inds = np.hstack((inds, t))
+                vals = np.hstack((vals, np.array(value)))
+            else:
+                inds = ind
+                vals = np.array(value)
+        else:
+            t = ind[0] - prev
+            while t > 255:
+                t -= 255
+                inds = np.hstack((inds, np.array([255])))
+                vals = np.hstack((vals, np.array([0.])))
+            inds = np.hstack((inds, np.array(t)))
+            vals = np.hstack((vals, np.array([value])))
+        prev = ind[0]
+    pbdr.close()
+    vals, scale = quantize(vals)
+    return inds, vals, scale
 
 
 def compression(weight_file):
@@ -62,17 +99,14 @@ def compression(weight_file):
         g = weights[layer_name]
         f.attrs['weight_names'] = g.attrs['weight_names']
         for weight_name in g.attrs['weight_names']:
-            print(weight_name)
             weight_value = g[weight_name].value
             shape = weight_value.shape
-            print(shape)
             if len(shape) >= 2:
+                print('Start pruning {}'.format(weight_name))
                 indexes, values, scale = prune(weight_value)
-                print(indexes.shape)
-                print(values.shape)
                 # plot_histograms(values)
-                pind = f.create_dataset('index', indexes.shape, dtype='int32')
-                pval = f.create_dataset(weight_name, values.shape, dtype='float32')
+                pind = f.create_dataset('index', indexes.shape, dtype='uint8')
+                pval = f.create_dataset(weight_name, values.shape, dtype='int8')
                 psh = f.create_dataset('shape', np.array(shape).shape, dtype='int32')
                 pscale = f.create_dataset('scale', shape=(1,), dtype='float32')
                 pind[:] = indexes
