@@ -38,13 +38,27 @@ def quantize(weights):
 
 
 def prune(weight):
+    # todo: find more efficient method for pruning threshold
     th = np.std(weight)
-    weight = np.transpose(weight, (3, 2, 1, 0))
+    if len(weight.shape) == 4:
+        # pre-processing for 2D convolution
+        weight = np.transpose(weight, (3, 2, 0, 1))
+        shape = weight.shape
+        shape_arr = np.array(list(shape))
+        shape_arr = np.array([[np.prod(shape_arr[1:])], [np.prod(shape_arr[2:])], [shape_arr[2]]])
+    elif len(weight.shape) == 5:
+        # todo: pre-processing for 3D convolution
+        weight = np.transpose(weight, (3, 2, 0, 1))
+        shape = weight.shape
+        shape_arr = np.array(list(shape))
+        shape_arr = np.array([[np.prod(shape_arr[1:])], [np.prod(shape_arr[2:])], [shape_arr[2]]])
+    else:
+        # pre-processing for 1D convolution and fully-connected layer
+        weight = np.transpose(weight, (1, 0))
+        shape = weight.shape
+        shape_arr = np.array(list(shape))[0]
     indexes = np.argwhere(np.abs(weight) > th)
     values = weight[np.abs(weight) > th]
-    shape = weight.shape
-    shape_arr = np.array(list(shape))
-    shape_arr = np.array([[np.prod(shape_arr[1:])], [np.prod(shape_arr[2:])], [shape_arr[2]]])
     inds = None
     vals = None
     prev = 0
@@ -52,7 +66,14 @@ def prune(weight):
     pbdr = tqdm(total=len(values))
     for index, value in zip(indexes, values):
         pbdr.update(1)
-        ind = np.dot(index[:3], shape_arr) + index[-1]
+        # compute index
+        if len(shape) == 4:
+            ind = np.dot(index[:len(shape) - 1], shape_arr) + index[-1]
+        elif len(shape) == 5:
+            # todo
+            pass
+        else:
+            ind = [index[0] * shape[1] + index[1]]
         if inds is None:
             t = ind[0]
             if t > 255:
@@ -74,12 +95,12 @@ def prune(weight):
                 t -= 255
                 inds = np.hstack((inds, np.array([255])))
                 vals = np.hstack((vals, np.array([0.])))
-            inds = np.hstack((inds, np.array(t)))
+            inds = np.hstack((inds, np.array([t])))
             vals = np.hstack((vals, np.array([value])))
         prev = ind[0]
     pbdr.close()
     vals, scale = quantize(vals)
-    return inds, vals, scale
+    return inds, vals, scale, shape
 
 
 def compression(weight_file):
@@ -93,34 +114,34 @@ def compression(weight_file):
         layers = weights.attrs['layer_names']
     except:
         raise ValueError("hdf5 file must contain attribution: 'layer_names'")
-    compressed.attrs['layer_names'] = [name for name in weights.attrs['layer_names']]
     for layer_name in layers:
-        f = compressed.create_group(layer_name)
         g = weights[layer_name]
-        f.attrs['weight_names'] = g.attrs['weight_names']
-        for weight_name in g.attrs['weight_names']:
-            weight_value = g[weight_name].value
-            shape = weight_value.shape
-            if len(shape) >= 2:
-                print('Start pruning {}'.format(weight_name))
-                indexes, values, scale = prune(weight_value)
-                # plot_histograms(values)
-                pind = f.create_dataset('index', indexes.shape, dtype='uint8')
-                pval = f.create_dataset(weight_name, values.shape, dtype='int8')
-                psh = f.create_dataset('shape', np.array(shape).shape, dtype='int32')
-                pscale = f.create_dataset('scale', shape=(1,), dtype='float32')
-                pind[:] = indexes
-                pval[:] = values
-                psh[:] = np.array(shape)
-                pscale[:] = np.array([scale])
-            else:
-                pval = f.create_dataset(weight_name, weight_value.shape, dtype='float32')
-                pval[:] = weight_value
+        if len(g.attrs['weight_names']) > 0:
+            layer_name = str(layer_name).split("'")[1]
+            f = compressed.create_group(layer_name)
+            for weight_name in g.attrs['weight_names']:
+                weight_value = g[weight_name].value
+                shape = weight_value.shape
+                if len(shape) >= 2:
+                    print('Start pruning {}'.format(weight_name))
+                    indexes, values, scale, shape = prune(weight_value)
+                    # plot_histograms(values)
+                    pind = f.create_dataset('indexes', indexes.shape, dtype='uint8')
+                    pval = f.create_dataset('weights', values.shape, dtype='int8')
+                    psh = f.create_dataset('shape', np.array(shape).shape, dtype='int32')
+                    pscale = f.create_dataset('scale', shape=(1,), dtype='float32')
+                    pind[:] = indexes
+                    pval[:] = values
+                    psh[:] = np.array(shape)
+                    pscale[:] = np.array([scale])
+                else:
+                    weight_name = str(weight_name).split("'")[1].split('/')[-1]
+                    pbias = f.create_dataset(weight_name, shape, dtype='float32')
+                    pbias[:] = weight_value
     compressed.flush()
     compressed.close()
-    weights.close()
     print('Converting done')
 
 
 if __name__ == '__main__':
-    compression('./weights/vgg16_weights_tf_dim_ordering_tf_kernels.h5')
+    compression('./weights/LeNet.h5')
