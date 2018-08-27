@@ -91,6 +91,3 @@ def inception_v3(nb_classes, is_training=True):
 
     model = Model(inputs=model_input, outputs=x)
     return model
-
-model = inception_v3(10, is_training=True)
-model.summary()
