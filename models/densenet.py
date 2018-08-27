@@ -7,7 +7,7 @@ from utils.keras_wrapped_layers import drop_connect_conv_2d, drop_connect_dense
 
 def conv2d_factory(x, nb_filters, kernel_size=(3, 3), drop_prob=0.,
                  is_training=True, weight_decay=1E-4):
-    drop_connect_conv_2d(x, nb_filters, kernel_size,
+    x = drop_connect_conv_2d(x, nb_filters, kernel_size,
                          kernel_initializer='he_normal',
                          padding="same",
                          use_bias=False,
