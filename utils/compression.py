@@ -43,6 +43,8 @@ def set_weights(model, weights):
                     with tf.Session() as sess:
                         tmp, s = quantize(sess.run(weight_tensor))
                         weight[0] = np.float32(tmp) * s
+                        del x
+                        del weight_tensor
                     model.layers[i].set_weights(weight)
                 dropped_weights[model.layers[i].name] = weight
     return model, dropped_weights
