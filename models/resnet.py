@@ -48,7 +48,7 @@ def resnet(nb_classes, depth=20, weight_decay=1E-4, is_training=True):
                              use_bias=False,
                              kernel_initializer="he_normal",
                              kernel_regularizer=l2(weight_decay),
-                             drop_prob=0.2,
+                             drop_prob=0.0,
                              is_training=is_training)
 
     # stage 1
@@ -106,7 +106,9 @@ def resnet(nb_classes, depth=20, weight_decay=1E-4, is_training=True):
                            nb_classes,
                            activation='softmax',
                            kernel_regularizer=l2(weight_decay),
-                           bias_regularizer=l2(weight_decay))
+                           bias_regularizer=l2(weight_decay),
+                          drop_prob=0.5,
+                          is_training=is_training)
 
     model = Model(inputs=model_input, outputs=x)
     return model
