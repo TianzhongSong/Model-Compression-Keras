@@ -38,7 +38,7 @@ def training():
     datagen = ImageDataGenerator(horizontal_flip=True,
                                  width_shift_range=5. / 32,
                                  height_shift_range=5. / 32)
-    data_iter = datagen.flow(x_train, y_train, batch_size=args.batch_size, shuffle=True)
+    data_iter = datagen.flow(x_train, y_train, batch_size=batch_size, shuffle=True)
 
     model = inception_v3(nb_classes, is_training=True)
 
