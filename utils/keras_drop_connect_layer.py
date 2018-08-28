@@ -3,7 +3,7 @@ import keras.backend as K
 
 
 class DropConnect(Wrapper):
-    def __init__(self, layer, prob=1., training=False, **kwargs):
+    def __init__(self, layer, prob=0., training=False, **kwargs):
         self.prob = prob
         self.training = training
         self.layer = layer
