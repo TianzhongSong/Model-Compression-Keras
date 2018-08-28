@@ -47,7 +47,7 @@ def densenet(nb_classes, growth_rate, reduce_rate=0.5,
     model_input = Input(shape=(32, 32, 3))
 
     # init convolution
-    x = conv2d_factory(model_input, nb_channels, drop_prob=0.2, is_training=is_training)
+    x = conv2d_factory(model_input, nb_channels, drop_prob=0.0, is_training=is_training)
 
     for block in range(blocks - 1):
         x, nb_channels =  dense_block(x, growth_rate, dense_layers,
@@ -62,7 +62,7 @@ def densenet(nb_classes, growth_rate, reduce_rate=0.5,
     x = drop_connect_dense(x, nb_classes, activation='softmax',
                            kernel_regularizer=l2(weight_decay),
                            bias_regularizer=l2(weight_decay),
-                           drop_prob=0.2,
+                           drop_prob=0.5,
                            is_training=is_training)
 
     model = Model(inputs=model_input, outputs=x)
