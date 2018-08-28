@@ -36,7 +36,7 @@ def training():
     datagen = ImageDataGenerator(horizontal_flip=True,
                                  width_shift_range=5. / 32,
                                  height_shift_range=5. / 32)
-    data_iter = datagen.flow(x_train, y_train, batch_size=args.batch_size, shuffle=True)
+    data_iter = datagen.flow(x_train, y_train, batch_size=batch_size, shuffle=True)
 
     model = cnn(nb_classes, is_training=True)
     # initiate RMSprop optimizer
@@ -57,7 +57,7 @@ def training():
     model.save_weights('./results/cnn_weights.h5')
 
     dropped_weights = compression.select_best_model(model, x_test, y_test, iter=100)
-    compression.save_pruned_weights(dropped_weights, 'compressed_weights')
+    compression.save_pruned_weights(dropped_weights, 'cnn_compressed_weights')
 
 
 if __name__ == '__main__':
