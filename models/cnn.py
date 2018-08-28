@@ -7,7 +7,7 @@ def cnn(nb_classes, is_training=True):
     model_input = Input(shape=(32, 32, 3))
 
     x = drop_connect_conv_2d(model_input, 32, (3, 3), padding='same', activation='relu',
-                             drop_prob=0.2, is_training=is_training)
+                             drop_prob=0.0, is_training=is_training)
     x = drop_connect_conv_2d(x, 32, (3, 3), padding='same', activation='relu',
                              drop_prob=0.5, is_training=is_training)
     x = MaxPooling2D(pool_size=(2, 2), padding='same')(x)
@@ -27,7 +27,7 @@ def cnn(nb_classes, is_training=True):
     x = Flatten()(x)
 
     x = drop_connect_dense(x, 512, activation='relu', drop_prob=0.5, is_training=is_training)
-    x = drop_connect_dense(x, nb_classes, activation='softmax', drop_prob=0.2, is_training=is_training)
+    x = drop_connect_dense(x, nb_classes, activation='softmax', drop_prob=0.5, is_training=is_training)
 
     model = Model(inputs=model_input, outputs=x)
 
