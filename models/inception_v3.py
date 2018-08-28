@@ -24,8 +24,8 @@ def inception_v3(nb_classes, is_training=True):
     model_input = Input(shape=(32, 32, 3))
 
     # init convolution
-    x = conv2d_factory(model_input, 32, drop_prob=0.2, is_training=is_training)
-    x = conv2d_factory(x, 32, drop_prob=0.2, is_training=is_training)
+    x = conv2d_factory(model_input, 32, drop_prob=0.0, is_training=is_training)
+    x = conv2d_factory(x, 32, drop_prob=0.0, is_training=is_training)
 
     # stage 1 32x32x64
     for _ in range(2):
@@ -87,7 +87,9 @@ def inception_v3(nb_classes, is_training=True):
     x = GlobalAveragePooling2D()(x)
     x = drop_connect_dense(x, nb_classes, activation='softmax',
                            kernel_regularizer=l2(weight_decay),
-                           bias_regularizer=l2(weight_decay))
+                           bias_regularizer=l2(weight_decay)，
+                          drop_prob=0.5,
+                          is_training=is_training)
 
     model = Model(inputs=model_input, outputs=x)
     return model
