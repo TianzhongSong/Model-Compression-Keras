@@ -59,7 +59,7 @@ def training():
     model.save_weights('./results/densenet_{0}_{1}_weights.h5'.format(args.depth, args.growth_rate))
 
     dropped_weights = compression.select_best_model(model, x_test, y_test, iter=100)
-    compression.save_pruned_weights(dropped_weights, 'densenet_{}_{}_compressed_weights'.format(args.depth, args.growth_rate))
+    compression.save_pruned_weights(dropped_weights, 'densenet_{0}_{1}_compressed_weights'.format(args.depth, args.growth_rate))
 
 
 if __name__ == '__main__':
