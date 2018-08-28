@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 import h5py
 from tqdm import tqdm
+from copy import deepcopy
 
 
 def quantize(weights, bits=8):
@@ -32,7 +33,7 @@ def set_weights(model, weights):
     dropped_weights = {}
     for i in range(len(model.layers)):
         if model.layers[i].name in weights:
-            weight = weights[model.layers[i].name]
+            weight = deepcopy(weights[model.layers[i].name])
             if len(weight) > 0:
                 if len(weight[0].shape) >= 2:
                     drop_rate = model.layers[i].prob
@@ -151,6 +152,6 @@ def select_best_model(model,x_test, y_test, iter=100):
         print('loss: {0}, acc: {1}'.format(score[0], score[1]))
         if score[0] < min_loss:
             min_loss = score[0]
-            dropped_weights = tmp_weights.copy()
+            dropped_weights = deepcopy(tmp_weights)
     print('The min loss is {}'.format(min_loss))
     return dropped_weights
