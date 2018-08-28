@@ -2,6 +2,7 @@ import keras
 from utils.load_cifar import load_data
 from keras.preprocessing.image import ImageDataGenerator
 from models.cnn import cnn
+from utils import compression
 import argparse
 import os
 
@@ -53,8 +54,10 @@ def training():
     if not os.path.exists('./results/'):
         os.mkdir('./results/')
     save_history(history, './results/', 'cnn')
-    model.save_weights('./results/cnn_weughts.h5')
-    # todo: save compressed weights
+    model.save_weights('./results/cnn_weights.h5')
+
+    dropped_weights = compression.select_best_model(model, x_test, y_test, iter=100)
+    compression.save_pruned_weights(dropped_weights, 'compressed_weights')
 
 
 if __name__ == '__main__':
