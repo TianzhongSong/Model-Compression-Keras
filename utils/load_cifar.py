@@ -7,6 +7,8 @@ def load_data(data='c10'):
         print('Loading CIFAR-10 dataset')
         nb_classes = 10
         (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+        x_train = x_train.astype(np.float32)
+        x_test = x_test.astype(np.float32)
         mean = np.array([125.3, 123.0, 113.9])
         std = np.array([63.0, 62.1, 66.7])
         x_train -= mean
@@ -17,6 +19,8 @@ def load_data(data='c10'):
         print('Loading CIFAR-100 dataset')
         nb_classes = 100
         (x_train, y_train), (x_test, y_test) = cifar100.load_data()
+        x_train = x_train.astype(np.float32)
+        x_test = x_test.astype(np.float32)
         mean = np.array([129.3, 124.1, 112.4])
         std = np.array([68.2, 65.4, 70.4])
         x_train -= mean
