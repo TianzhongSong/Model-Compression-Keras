@@ -38,7 +38,7 @@ def training():
     datagen = ImageDataGenerator(horizontal_flip=True,
                                  width_shift_range=5. / 32,
                                  height_shift_range=5. / 32)
-    data_iter = datagen.flow(x_train, y_train, batch_size=args.batch_size, shuffle=True)
+    data_iter = datagen.flow(x_train, y_train, batch_size=batch_size, shuffle=True)
 
     model = resnet(nb_classes, depth=args.depth, is_training=True)
 
