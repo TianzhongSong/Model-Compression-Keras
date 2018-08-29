@@ -58,16 +58,23 @@ def prune_weights(weight):
         shape_arr = np.array(list(shape))
         shape_arr = np.array([[np.prod(shape_arr[1:])], [np.prod(shape_arr[2:])], [shape_arr[2]]])
     elif len(weight.shape) == 5:
-        # todo: pre-processing for 3D convolution
-        weight = np.transpose(weight, (3, 2, 0, 1))
+        # pre-processing for 3D convolution
+        weight = np.transpose(weight, (4, 3, 2, 0, 1))
         shape = weight.shape
         shape_arr = np.array(list(shape))
-        shape_arr = np.array([[np.prod(shape_arr[1:])], [np.prod(shape_arr[2:])], [shape_arr[2]]])
+        shape_arr = np.array([[np.prod(shape_arr[1:])], [np.prod(shape_arr[2:])],
+                              [np.prod(shape_arr[3:])], [shape_arr[3]]])
+    elif len(weight.shape) == 3:
+        # pre-processing for 1D convolution
+        weight = np.transpose(weight, (2, 0, 1))
+        shape = weight.shape
+        shape_arr = np.array(list(shape))
+        shape_arr = np.array([[np.prod(shape_arr[1:])], [shape_arr[1]]])
     else:
-        # pre-processing for 1D convolution and fully-connected layer
+        # pre-processing for fully connected layer
         weight = np.transpose(weight, (1, 0))
         shape = weight.shape
-        shape_arr = np.array(list(shape))[0]
+        shape_arr = np.array(list(shape)[1])
     indexes = np.argwhere(np.abs(weight) > 0)
     values = weight[np.abs(weight) > 0]
     inds = []
@@ -78,16 +85,7 @@ def prune_weights(weight):
     for index, value in zip(indexes, values):
         pbdr.update(1)
         # compute index
-        if len(shape) == 4:
-            ind = np.dot(index[:len(shape) - 1], shape_arr) + index[-1]
-        elif len(shape) == 5:
-            # todo
-            pass
-        elif len(shape) == 3:
-            # todo
-            pass
-        else:
-            ind = [index[0] * shape[1] + index[1]]
+        ind = np.dot(index[:len(shape) - 1], shape_arr) + index[-1]
         if len(inds) == 0:
             t = ind[0]
             if t > 255:
