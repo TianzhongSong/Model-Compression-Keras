@@ -16,6 +16,13 @@ def quantize(weights, bits=8):
     return qweights, s
 
 
+def drop_kernel(x, keep_prob=1.):
+    binary_arr = np.random.binomial(1, keep_prob, size=x.shape)
+    x /= keep_prob
+    x *= binary_arr
+    return x
+
+
 def get_weights(model):
     """
     Get model weights
@@ -37,14 +44,10 @@ def set_weights(model, weights):
             if len(weight) > 0:
                 if len(weight[0].shape) >= 2:
                     drop_rate = model.layers[i].prob
-                    with tf.device('/cpu:0'):
-                        x = tf.constant(weight[0], dtype=tf.float32)
-                        weight_tensor = tf.nn.dropout(x, 1. - drop_rate)
-                    with tf.Session() as sess:
-                        tmp, s = quantize(sess.run(weight_tensor))
+                    if 0. < drop_rate < 1.:
+                        tmp = drop_kernel(weight[0], keep_prob = 1. - drop_rate)
+                        tmp, s = quantize(tmp)
                         weight[0] = np.float32(tmp) * s
-                        del x
-                        del weight_tensor
                     model.layers[i].set_weights(weight)
                 dropped_weights[model.layers[i].name] = weight
     return model, dropped_weights
