@@ -87,7 +87,7 @@ def inception_v3(nb_classes, is_training=True):
     x = GlobalAveragePooling2D()(x)
     x = drop_connect_dense(x, nb_classes, activation='softmax',
                            kernel_regularizer=l2(weight_decay),
-                           bias_regularizer=l2(weight_decay)，
+                           bias_regularizer=l2(weight_decay),
                           drop_prob=0.5,
                           is_training=is_training)
 
