@@ -58,14 +58,19 @@ def main():
     # save masks for weight layers
     masks = {}
     layer_count = 0
+    # not compress first convolution layer
+    first_conv = True
     for layer in model.layers:
         weight = layer.get_weights()
         if len(weight) >= 2:
-            w = deepcopy(weight)
-            tmp, mask = prune_weights(w[0], compress_rate=args.compress_rate)
-            masks[layer_count] = mask
-            w[0] = tmp
-            layer.set_weights(w)
+            if not first_conv:
+                w = deepcopy(weight)
+                tmp, mask = prune_weights(w[0], compress_rate=args.compress_rate)
+                masks[layer_count] = mask
+                w[0] = tmp
+                layer.set_weights(w)
+            else:
+                first_conv = False
         layer_count += 1
     # evaluate model after pruning
     score = model.evaluate_generator(val, steps=5000 // batch_size)
