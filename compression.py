@@ -133,7 +133,7 @@ def decode(weights, indexes, shape, scale):
             index += j
             x = index // np.prod(shape[1:])
             y = (index % np.prod(shape[1:])) // shape[2]
-            h = ((index % np.prod(shape[1:])) % np.prod(shape[2:])) % shape[2]
+            h = (index % np.prod(shape[1:])) % shape[2]
             decoded[x, y, h] = i
         pbdr.close()
         decoded = np.transpose(decoded, (1, 2, 0))
