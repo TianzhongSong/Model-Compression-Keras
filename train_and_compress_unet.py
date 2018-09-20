@@ -78,7 +78,7 @@ def main():
     print('val acc: {}'.format(score[1]))
     # fine-tune
     for i in range(fine_tune_epochs):
-        for X, Y in train:
+        for X, Y in seg_data.generator(root_path, train_file, batch_size, nClasses, img_height, img_width):
             # train on each batch
             model.train_on_batch(X, Y)
             # apply masks
@@ -86,7 +86,7 @@ def main():
                 w = model.layers[layer_id].get_weights()
                 w[0] = w[0] * masks[layer_id]
                 model.layers[layer_id].set_weights(w)
-        score = model.evaluate_generator(val, steps=5000 // batch_size)
+        score = model.evaluate_generator(seg_data.generator(root_path, val_file, batch_size, nClasses, img_height, img_width, train=False), steps=5000 // batch_size)
         print('val loss: {}'.format(score[0]))
         print('val acc: {}'.format(score[1]))
 
