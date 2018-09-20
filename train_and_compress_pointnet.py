@@ -100,7 +100,7 @@ def main():
                 w = model.layers[layer_id].get_weights()
                 w[0] = w[0] * masks[layer_id]
                 model.layers[layer_id].set_weights(w)
-        score = model.evaluate_generator(val, steps=2468 // batch_size)
+        score = model.evaluate_generator(val.data_generator(), steps=2468 // batch_size)
         print('val loss: {}'.format(score[0]))
         print('val acc: {}'.format(score[1]))
 
